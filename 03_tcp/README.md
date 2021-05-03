@@ -24,3 +24,7 @@ https://doc.rust-lang.org/std/io/struct.BufReader.html
 
 
 telnet 0.0.0.0 8080                
+
+https://doc.rust-lang.org/rust-by-example/error/option_unwrap.html
+
+arc = atomic reference count

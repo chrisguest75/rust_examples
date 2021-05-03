@@ -5,7 +5,8 @@ use std::io::BufReader;
 // Traits
 use std::io::BufRead;
 use std::io::Write;
-
+use std::sync::Arc;
+use std::sync::Mutex;
 
 use std::collections::VecDeque;
 
@@ -43,7 +44,7 @@ fn parse_request(line: String) -> Request {
     //drop(line)
 }
 
-fn handle_client(mut stream: TcpStream, storage: &mut VecDeque<String>) -> () {
+fn handle_client(mut stream: TcpStream, storage: &Mutex<VecDeque<String>>) -> () {
     println!("Client connected!");
 
     let input = read_line(&stream);
@@ -53,10 +54,14 @@ fn handle_client(mut stream: TcpStream, storage: &mut VecDeque<String>) -> () {
     match request {
         Request::Publish(msg) => {
             println!("Publising message {}", msg);
-            storage.push_back(msg);
+            let mut guard = storage.lock().unwrap();
+            guard.push_back(msg);
+
+            // the scope drops the guard
         }
         Request::Retrieve => {
-            let maybe_msg = storage.pop_front();
+            // single line scope for guard
+            let maybe_msg = storage.lock().unwrap().pop_front();
             match maybe_msg {
                 Some(msg) => {
                     // the string is seen as bytes - no copy involves
@@ -68,7 +73,6 @@ fn handle_client(mut stream: TcpStream, storage: &mut VecDeque<String>) -> () {
                     stream.write_all(b"No message available").unwrap();
                 }
             }
-
         }
     }
 
@@ -83,17 +87,22 @@ fn main() {
     // expect vs unwrap vs ?  
     let listener = TcpListener::bind("0.0.0.0:8080").unwrap();
 
-    let mut dequeue = VecDeque::new();
+    let dequeue = Arc::new(Mutex::new(VecDeque::new()));
     // incoming returns a iterator.   connection_attempt <, error>
     for connection_attempt in listener.incoming() {
 
         match connection_attempt {
             Ok(stream) => {
-                // ownership is handed to the handle_client function  (low coupling)
-                handle_client(stream, &mut dequeue);
+                // arc = atomic reference counter..  
+                let thread_handle = Arc::clone(&dequeue);
+                // how do we pass a mutable collection storage into a thread?
+                std::thread::spawn(move || {
+                    // ownership is handed to the handle_client function  (low coupling)
+                    handle_client(stream, &thread_handle);
 
-                // ownership handover is complete.  Cannot uae it now
-                // println!("{:?}", stream);
+                    // ownership handover is complete.  Cannot uae it now
+                    // println!("{:?}", stream);
+                });
             }
             Err(e) => {
                 eprintln!("Error connecting: {}", e);
