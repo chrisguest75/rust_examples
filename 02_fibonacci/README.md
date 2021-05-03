@@ -5,3 +5,5 @@ cargo init --bin fibonacci
 
 cargo run
 
+Collections
+https://doc.rust-lang.org/std/collections/index.html

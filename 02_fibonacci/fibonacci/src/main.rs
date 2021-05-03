@@ -2,15 +2,18 @@ fn add(a: i32, b: i32) -> i32 {
     return a + b;
 }
 
-fn fibonacci(generations: i32) -> vec {
+fn fibonacci(generations: i32) -> vec! {
     let mut sequence = vec![1, 1];
+    let mut a = 1;
+    let mut b = 1;
 
-    while generations > 0 {
-        let a = sequence[-2];
-        let b = sequence[-1];
+    /*while generations > 0 {
         let c: i32 = a + b;
-        sequence.push(c)    
-    }
+        sequence.push(c);   
+        a = b;
+        b = c;
+        generations-=1; 
+    };*/
     return sequence;
 }
 
@@ -26,7 +29,7 @@ fn main() {
         x, a, b
     );
 
-    let sequence = fibonacci(20);
-    println!(sequence)
+    //let sequence = fibonacci(20);
+    //println!(sequence)
 
 }
