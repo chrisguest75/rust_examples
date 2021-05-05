@@ -23,7 +23,6 @@ enum Request {
     Retrieve
 }
 
-
 fn read_line(stream: &TcpStream) -> String {
     let mut buffered_reader = BufReader::new(stream);
 
@@ -84,8 +83,11 @@ fn handle_client(mut stream: TcpStream, storage: &Mutex<VecDeque<String>>) -> ()
 fn main() {
     let _who = args().nth(1);
 
+    let port="0.0.0.0:8080";
+    println!("Binding to {}", port);
     // expect vs unwrap vs ?  
-    let listener = TcpListener::bind("0.0.0.0:8080").unwrap();
+    let listener = TcpListener::bind(port).unwrap();
+    println!("Waiting for message");
 
     let dequeue = Arc::new(Mutex::new(VecDeque::new()));
     // incoming returns a iterator.   connection_attempt <, error>
@@ -110,5 +112,4 @@ fn main() {
             
         }
     }
-    //println!("Hello, world!");
 }
